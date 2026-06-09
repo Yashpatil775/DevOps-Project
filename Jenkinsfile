@@ -3,29 +3,47 @@ pipeline {
 
     stages {
 
-        stage('Clone') {
+        stage('Show Workspace') {
             steps {
-                echo 'Code cloned from GitHub'
+                sh '''
+                pwd
+                ls -la
+                '''
             }
         }
 
         stage('Build Docker Image') {
-    steps {
-        sh '''
-        pwd
-        ls -la
-        docker build -t myhtmlapp:v2 .
-        '''
-    }
-}
-
-        stage('Run Container') {
             steps {
                 sh '''
-                docker rm -f myweb2 || true
-                docker run -d --name myweb2 -p 8081:80 myhtmlapp:v2
+                docker build -t devopspro:v2 .
                 '''
             }
+        }
+
+        stage('Remove Old Container') {
+            steps {
+                sh '''
+                docker rm -f myweb || true
+                '''
+            }
+        }
+
+        stage('Run New Container') {
+            steps {
+                sh '''
+                docker run -d --name myweb -p 8081:80 devopspro:v2
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Deployment Successful'
+        }
+
+        failure {
+            echo 'Deployment Failed'
         }
     }
 }
